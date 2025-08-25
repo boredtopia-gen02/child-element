@@ -11,8 +11,8 @@ export interface ReadyMessage extends GameBridgeMessage {
   };
 }
 
-export interface SignedMessage extends GameBridgeMessage {
-  type: 'signed';
+export interface AuthMessage extends GameBridgeMessage {
+  type: 'auth';
   payload: {
     gameName: string;
     signature: string;
@@ -31,4 +31,4 @@ export interface ErrorMessage extends GameBridgeMessage {
   };
 }
 
-export type GameBridgeMessageType = ReadyMessage | SignedMessage | ErrorMessage;
+export type GameBridgeMessageType = ReadyMessage | AuthMessage | ErrorMessage;
