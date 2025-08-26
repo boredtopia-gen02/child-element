@@ -22,6 +22,15 @@ export interface AuthMessage extends GameBridgeMessage {
   };
 }
 
+export interface UpdateMessage extends GameBridgeMessage {
+  type: 'update';
+  payload: {
+    gameName: string;
+    currentNonce: number;
+    gamePoints: number;
+  };
+}
+
 export interface ErrorMessage extends GameBridgeMessage {
   type: 'error';
   payload: {
