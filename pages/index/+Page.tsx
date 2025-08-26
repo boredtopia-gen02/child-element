@@ -359,14 +359,14 @@ export default function Page() {
           )}
           <div className="flex gap-4">
             <button 
-              className={`px-4 py-2 text-white rounded ${verificationResult === true && status !== 'waiting_update' ? 'bg-blue-500 hover:bg-blue-600' : 'bg-gray-400 cursor-not-allowed'}`}
+              className={`px-4 py-2 text-white hover:cursor-pointer rounded ${verificationResult === true && status !== 'waiting_update' ? 'bg-blue-500 hover:bg-blue-600' : 'bg-gray-400 cursor-not-allowed'}`}
               onClick={handleMint}
               disabled={verificationResult !== true || status === 'waiting_update'}
             >
               {status === 'minting' ? 'Signing...' : 'Mint'}
             </button>
             <button 
-              className={`px-4 py-2 text-white rounded ${verificationResult === true && status !== 'waiting_update' ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-400 cursor-not-allowed'}`}
+              className={`px-4 py-2 text-white hover:cursor-pointer rounded ${verificationResult === true && status !== 'waiting_update' ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-400 cursor-not-allowed'}`}
               onClick={handleBurn}
               disabled={verificationResult !== true || status === 'waiting_update'}
             >
