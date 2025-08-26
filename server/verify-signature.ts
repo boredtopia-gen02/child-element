@@ -8,15 +8,6 @@ interface VerifySignatureRequest {
   timestamp: number;
 }
 
-interface VerifySignatureResponse {
-  success: boolean;
-  error?: string;
-  data?: {
-    isValid: boolean;
-    walletAddress: string;
-  };
-}
-
 export async function verifySignatureHandler(c: Context): Promise<Response> {
   try {
     // ตรวจสอบ Content-Type
