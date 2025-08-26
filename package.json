@@ -12,6 +12,7 @@
     "@universal-middleware/core": "^0.4.9",
     "@universal-middleware/hono": "^0.4.16",
     "@vitejs/plugin-react": "^5.0.1",
+    "ethers": "^6.15.0",
     "hono": "^4.9.4",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",

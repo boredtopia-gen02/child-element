@@ -1,6 +1,5 @@
 import { Context } from 'hono';
-import { verifySignature } from "thirdweb/auth";
-import { client, chain } from "./thirdweb-config";
+import { verifyAuthSignature } from "./auth-helper";
 
 interface VerifySignatureRequest {
   walletAddress: string;
@@ -36,41 +35,20 @@ export async function verifySignatureHandler(c: Context): Promise<Response> {
       }, 400);
     }
 
-    // ตรวจสอบ timestamp (ไม่ให้เก่ากว่า 5 นาที)
-    const currentTime = Date.now();
-    const fiveMinutesAgo = currentTime - (5 * 60 * 1000);
+    // ใช้ helper function สำหรับ verify auth signature (ใช้ default expire time)
+    const authVerification = await verifyAuthSignature(walletAddress, signature, message, timestamp);
     
-    if (timestamp < fiveMinutesAgo) {
+    if (!authVerification.isValid) {
       return c.json({
         success: false,
-        error: 'Signature timestamp is too old'
+        error: authVerification.error || 'Signature verification failed'
       }, 400);
     }
-
-    if (timestamp > currentTime + (1 * 60 * 1000)) { // ไม่ให้อนาคตเกิน 1 นาที
-      return c.json({
-        success: false,
-        error: 'Signature timestamp is in the future'
-      }, 400);
-    }
-
-    // ตรวจสอบรูปแบบ message ให้ตรงกับ format ที่ parent ส่งมา
-    // format: "gameName:timestamp" เช่น "crosswalk:1323423423"
-    const expectedMessage = `crosswalk:${timestamp}`;
-    if (message !== expectedMessage) {
-      return c.json({
-        success: false,
-        error: `Invalid message format. Expected: ${expectedMessage}, Got: ${message}`
-      }, 400);
-    }
-
-    // ใช้ thirdweb verifySignature แทน ethers
-    const isValid = await verifyThirdwebSignature(walletAddress, signature, message);
 
     return c.json({
       success: true,
       data: {
-        isValid,
+        isValid: true,
         walletAddress
       }
     });
@@ -81,36 +59,5 @@ export async function verifySignatureHandler(c: Context): Promise<Response> {
       success: false,
       error: 'Internal server error'
     }, 500);
-  }
-}
-
-// Thirdweb signature verification
-async function verifyThirdwebSignature(
-  walletAddress: string,
-  signature: string,
-  message: string
-): Promise<boolean> {
-  try {
-    // ใช้ thirdweb verifySignature function
-    const isValid = await verifySignature({
-      message,
-      signature,
-      address: walletAddress,
-      client,
-      chain
-    });
-    
-    console.log('Thirdweb signature verification:', {
-      walletAddress,
-      message,
-      signature,
-      isValid
-    });
-    
-    return isValid;
-    
-  } catch (error) {
-    console.error('Thirdweb signature verification failed:', error);
-    return false;
   }
 }

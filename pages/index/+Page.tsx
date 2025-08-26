@@ -9,6 +9,12 @@ export default function Page() {
   const [currentNonce, setCurrentNonce] = useState<number | null>(null);
   const [gamePoints, setGamePoints] = useState<number | null>(null);
   const [verificationResult, setVerificationResult] = useState<boolean | null>(null);
+  // เก็บ auth signature และข้อมูลที่เกี่ยวข้องไว้ใช้กับ API calls
+  const [authData, setAuthData] = useState<{
+    signature: string;
+    message: string;
+    timestamp: number;
+  } | null>(null);
 
   const verifySignature = async (authPayload: any) => {
     try {
@@ -45,6 +51,52 @@ export default function Page() {
     }
   };
 
+  const signAction = async (action: 'mint' | 'burn', amount: number): Promise<{ signature: string; nextNonce: number } | null> => {
+    try {
+      if (!walletAddress || currentNonce === null) {
+        console.error('Missing required data for signing');
+        return null;
+      }
+
+      if (!authData) {
+        console.error('Missing authentication data');
+        return null;
+      }
+
+      const response = await fetch('/api/sign-action', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          walletAddress,
+          action,
+          amount,
+          currentNonce,
+          // ส่ง auth data ไปให้ server verify
+          authSignature: authData.signature,
+          authMessage: authData.message,
+          authTimestamp: authData.timestamp
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        return {
+          signature: result.data.signature,
+          nextNonce: result.data.nextNonce
+        };
+      } else {
+        console.error('Failed to sign action:', result.error);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error calling sign action API:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     // ส่ง ready ไปยัง parent iframe
     sendMessage({ type: "ready", payload: { gameName: "crosswalk" } });
@@ -58,8 +110,15 @@ export default function Page() {
         setGamePoints(message.payload.gamePoints !== undefined ? message.payload.gamePoints : null);
         setStatus('auth');
         
-        // Verify signature
+        // เก็บ auth signature ไว้ใช้กับ API calls
         if (message.payload.signature && message.payload.message && message.payload.timestamp) {
+          setAuthData({
+            signature: message.payload.signature,
+            message: message.payload.message,
+            timestamp: message.payload.timestamp
+          });
+          
+          // Verify signature
           verifySignature(message.payload);
         }
       }
@@ -67,28 +126,86 @@ export default function Page() {
     return removeListener;
   }, [sendMessage, addMessageListener]);
 
-  const handleMint = () => {
+  const handleMint = async () => {
     if (verificationResult !== true) {
       console.error('Cannot mint: signature not verified');
       return;
     }
     
     setStatus('minting');
-    // TODO: ส่ง mint message ไป parent
-    sendMessage({ type: 'mint', payload: { walletAddress } });
-    setTimeout(() => setStatus('verified'), 1000); // mock mint เสร็จ
+    
+    try {
+      // Default amount to mint (you can make this configurable)
+      const amountToMint = 100;
+      
+      const result = await signAction('mint', amountToMint);
+      
+      if (result) {
+        // Send mint message with signature to parent
+        sendMessage({ 
+          type: 'mint', 
+          payload: { 
+            walletAddress,
+            signature: result.signature,
+            amount: amountToMint,
+            nextNonce: result.nextNonce
+          } 
+        });
+        
+        // Update current nonce locally
+        setCurrentNonce(result.nextNonce);
+        
+        console.log('Mint action signed and sent to parent');
+        setTimeout(() => setStatus('verified'), 1000); // mock mint เสร็จ
+      } else {
+        console.error('Failed to sign mint action');
+        setStatus('verified');
+      }
+    } catch (error) {
+      console.error('Error in handleMint:', error);
+      setStatus('verified');
+    }
   };
 
-  const handleBurn = () => {
+  const handleBurn = async () => {
     if (verificationResult !== true) {
       console.error('Cannot burn: signature not verified');
       return;
     }
     
     setStatus('burning');
-    // TODO: ส่ง burn message ไป parent
-    sendMessage({ type: 'burn', payload: { walletAddress } });
-    setTimeout(() => setStatus('verified'), 1000); // mock burn เสร็จ
+    
+    try {
+      // Default amount to burn (you can make this configurable)
+      const amountToBurn = 50;
+      
+      const result = await signAction('burn', amountToBurn);
+      
+      if (result) {
+        // Send burn message with signature to parent
+        sendMessage({ 
+          type: 'burn', 
+          payload: { 
+            walletAddress,
+            signature: result.signature,
+            amount: amountToBurn,
+            nextNonce: result.nextNonce
+          } 
+        });
+        
+        // Update current nonce locally
+        setCurrentNonce(result.nextNonce);
+        
+        console.log('Burn action signed and sent to parent');
+        setTimeout(() => setStatus('verified'), 1000); // mock burn เสร็จ
+      } else {
+        console.error('Failed to sign burn action');
+        setStatus('verified');
+      }
+    } catch (error) {
+      console.error('Error in handleBurn:', error);
+      setStatus('verified');
+    }
   };
 
   return (
