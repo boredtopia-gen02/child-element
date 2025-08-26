@@ -145,15 +145,13 @@ export default function Page() {
         sendMessage({ 
           type: 'mint', 
           payload: { 
+            gameName: "crosswalk",
             walletAddress,
             signature: result.signature,
             amount: amountToMint,
             nextNonce: result.nextNonce
           } 
         });
-        
-        // Update current nonce locally
-        setCurrentNonce(result.nextNonce);
         
         console.log('Mint action signed and sent to parent');
         setTimeout(() => setStatus('verified'), 1000); // mock mint เสร็จ
@@ -186,15 +184,13 @@ export default function Page() {
         sendMessage({ 
           type: 'burn', 
           payload: { 
+            gameName: "crosswalk",
             walletAddress,
             signature: result.signature,
             amount: amountToBurn,
             nextNonce: result.nextNonce
           } 
         });
-        
-        // Update current nonce locally
-        setCurrentNonce(result.nextNonce);
         
         console.log('Burn action signed and sent to parent');
         setTimeout(() => setStatus('verified'), 1000); // mock burn เสร็จ
