@@ -6,6 +6,8 @@ export default function Page() {
   const { sendMessage, addMessageListener } = useGameBridgeComm();
   const [status, setStatus] = useState<'waiting' | 'auth' | 'minting' | 'burning'>('waiting');
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [currentNonce, setCurrentNonce] = useState<number | null>(null);
+  const [gamePoints, setGamePoints] = useState<number | null>(null);
 
   useEffect(() => {
     // ส่ง ready ไปยัง parent iframe
@@ -16,6 +18,8 @@ export default function Page() {
     const removeListener = addMessageListener((message) => {
       if (message.type === "auth" && message.payload?.walletAddress) {
         setWalletAddress(message.payload.walletAddress);
+        setCurrentNonce(message.payload.currentNonce !== undefined ? message.payload.currentNonce : null);
+        setGamePoints(message.payload.gamePoints !== undefined ? message.payload.gamePoints : null);
         setStatus('auth');
       }
     });
@@ -45,6 +49,12 @@ export default function Page() {
       {status === 'auth' && walletAddress && (
         <div>
           <div className="text-green-700 pb-2">Wallet Address: <span className="font-mono">{walletAddress}</span></div>
+          {currentNonce !== null && (
+            <div className="text-blue-700 pb-2">Current Nonce: <span className="font-mono">{currentNonce}</span></div>
+          )}
+          {gamePoints !== null && (
+            <div className="text-purple-700 pb-2">Game Points: <span className="font-mono">{gamePoints}</span></div>
+          )}
           <div className="flex gap-4">
             <button className="px-4 py-2 bg-blue-500 text-white rounded" onClick={handleMint}>Mint</button>
             <button className="px-4 py-2 bg-red-500 text-white rounded" onClick={handleBurn}>Burn</button>
