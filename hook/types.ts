@@ -15,6 +15,7 @@ export interface AuthMessage extends GameBridgeMessage {
   type: 'auth';
   payload: {
     gameName: string;
+    gamePoints: number;
     signature: string;
     message: string;
     timestamp: number;
